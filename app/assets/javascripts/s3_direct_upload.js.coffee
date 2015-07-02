@@ -114,7 +114,7 @@ $.fn.S3Uploader = (options) ->
           value: fileType
 
         key_starts_with = $uploadForm.data('key-starts-with')
-        key = key_starts_with+new Date().getTime()+"-"+@files[0].unique_id+"-"+Math.random().toString(36).substr(2,16)+"/"+this.context.find('div.filename').html()
+        key = key_starts_with+new Date().getTime()+"-"+@files[0].unique_id+"-"+Math.random().toString(36).substr(2,16)+"/"+cleaned_filename(@files[0].name)
         # substitute upload timestamp and unique_id into key
         key_field = $.grep data, (n) ->
           n if n.name == "key"
@@ -138,8 +138,9 @@ $.fn.S3Uploader = (options) ->
       content.filename       = $(result).find('Key').text().split("/").pop()
     else # IE <= 9 retu      rn a null result object so we use the file object instead
       domain                 = $uploadForm.attr('action')
-      content.filepath       = $uploadForm.find('input[name=key]').val().replace('/${filename}', '')
-      content.url            = domain + content.filepath + '/' + encodeURIComponent(file.name)
+      content.filepath       = key.replace('/${filename}', '').replace('/{cleaned_filename}', '')
+      content.url            = domain + key.replace('/${filename}', encodeURIComponent(file.name))
+      content.url            = content.url.replace('/{cleaned_filename}', cleaned_filename(file.name))
       content.filename       = content.filepath.split("/").pop()
 
 
@@ -151,6 +152,9 @@ $.fn.S3Uploader = (options) ->
     content = $.extend content, settings.additional_data if settings.additional_data
     content
 
+  cleaned_filename = (filename) ->
+    filename.replace(/\s/g, '_').replace(/[^\w.-]/gi, '')
+    
   has_relativePath = (file) ->
     file.relativePath || file.webkitRelativePath
 
